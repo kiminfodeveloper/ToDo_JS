@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de Tarefas</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Lista de Tarefas</h1>
+      <div class="input-container">
+        <input
+          type="text"
+          id="taskInput"
+          placeholder="Adicione uma tarefa..."
+        />
+        <input type="date" id="dateInput" />
+        <button id="addTask">Adicionar</button>
+        <button id="clearFields">Limpar Campos</button>
+      </div>
+      <div class="columns">
+        <div class="column" id="column-start">
+          <h2>Status: Iniciando</h2>
+          <ul id="column-start-list" class="task-column"></ul>
+        </div>
+        <div class="column" id="column-progress">
+          <h2>Status: Em Progresso</h2>
+          <ul id="column-progress-list" class="task-column"></ul>
+        </div>
+        <div class="column" id="column-completed">
+          <h2>Status: Finalizado</h2>
+          <ul id="column-completed-list" class="task-column"></ul>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
