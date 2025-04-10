@@ -1,0 +1,18 @@
+# Dependências do Node.js
+node_modules/
+package-lock.json
+
+# Arquivos gerados pelo build do Electron
+dist/
+
+# Arquivos de cache e temporários
+*.log
+*.tmp
+.DS_Store
+
+# Arquivos de ambiente ou configurações locais
+.env
+.vscode/
+
+# Arquivos de cache do Electron Builder
+electron-builder-cache/

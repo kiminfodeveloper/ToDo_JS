@@ -1,39 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lista de Tarefas</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>Lista de Tarefas</h1>
-      <div class="input-container">
-        <input
-          type="text"
-          id="taskInput"
-          placeholder="Adicione uma tarefa..."
-        />
-        <input type="date" id="dateInput" />
-        <button class="taskbtn" id="addTask">Adicionar</button>
-        <button class="taskbtn" id="clearFields">Limpar Campos</button>
-      </div>
-      <div class="columns">
-        <div class="column" id="column-start">
-          <h2><span>Status:</span> Iniciando</h2>
-          <ul id="column-start-list" class="task-column"></ul>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Painel de Tarefas</title>
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Painel de Tarefas</h1>
+            <div class="input-area">
+                <input
+                    type="text"
+                    id="taskInput"
+                    placeholder="Digite uma tarefa..."
+                />
+                <select id="priority">
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                </select>
+                <button onclick="addTask()">Adicionar</button>
+                <button onclick="clearTasks()">Limpar Tudo</button>
+            </div>
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+                Modo Escuro
+            </button>
+            <div class="board">
+                <div
+                    class="column"
+                    id="todo"
+                    ondrop="drop(event)"
+                    ondragover="allowDrop(event)"
+                >
+                    <h2>A Fazer</h2>
+                    <div class="task-list" id="todo-list"></div>
+                </div>
+                <div
+                    class="column"
+                    id="in-progress"
+                    ondrop="drop(event)"
+                    ondragover="allowDrop(event)"
+                >
+                    <h2>Em Progresso</h2>
+                    <div class="task-list" id="in-progress-list"></div>
+                </div>
+                <div
+                    class="column"
+                    id="done"
+                    ondrop="drop(event)"
+                    ondragover="allowDrop(event)"
+                >
+                    <h2>Concluído</h2>
+                    <div class="task-list" id="done-list"></div>
+                </div>
+            </div>
         </div>
-        <div class="column" id="column-progress">
-          <h2><span>Status:</span> Em Progresso</h2>
-          <ul id="column-progress-list" class="task-column"></ul>
-        </div>
-        <div class="column" id="column-completed">
-          <h2><span>Status:</span> Finalizado</h2>
-          <ul id="column-completed-list" class="task-column"></ul>
-        </div>
-      </div>
-    </div>
-    <script defer src="script.js"></script>
-  </body>
+        <script src="./js/script.js"></script>
+    </body>
 </html>
