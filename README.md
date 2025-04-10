@@ -20,17 +20,7 @@ Bem-vindo ao repositório do **Painel de Tarefas**, um aplicativo desktop para g
 
 ## 🗂️ Estrutura de Pastas
 
-ToDo_JS/
-├── css/
-│ └── styles.css # Estilos da aplicação
-├── js/
-│ └── script.js # Lógica da aplicação
-├── dist/ # Arquivos gerados pelo build (ex.: instalador .exe)
-├── index.html # Interface principal
-├── main.js # Configuração do Electron
-├── package.json # Dependências e scripts
-├── LICENSE # Licença MIT
-└── README.md # Documentação do projeto
+![Estrutura](./images/estrutura.png)
 
 ## 🚀 Como Executar Localmente
 
@@ -43,7 +33,7 @@ ToDo_JS/
 
 1. Clone ou baixe este repositório:
     ```bash
-    git clone <URL_DO_REPOSITORIO>
+    git clone https://github.com/kiminfodeveloper/ToDo_JS
     cd ToDo_JS
     ```
 2. Instale as dependências:
@@ -52,9 +42,9 @@ ToDo_JS/
     ```
 3. Rode o aplicativo
 
-```bash
+    ```bash
     npm start
-```
+    ```
 
 Isso abrirá o "Painel de Tarefas" como um aplicativo desktop.
 
