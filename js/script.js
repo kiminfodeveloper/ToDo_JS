@@ -12,11 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
             Notification.requestPermission();
         }
     }
-
-    // // Teste: Enviar uma notificação imediatamente ao carregar o app
-    // setTimeout(() => {
-    //     sendNotification("Teste de Notificação");
-    // }, 2000); // Envia uma notificação de teste após 2 segundos
 });
 
 // Funções de Tarefa
@@ -36,6 +31,7 @@ function addTask() {
     task.draggable = true;
     task.dataset.timestamp = timestamp; // Armazena o timestamp no elemento
     task.dataset.notified = "false"; // Flag para controlar notificações
+    task.dataset.permanentlyNotified = "false"; // Novo flag para notificações permanentes
     task.innerHTML = `
         <input type="checkbox" onchange="toggleComplete(this)">
         <span>${taskText} <small class="time-ago"></small></span>
@@ -80,7 +76,10 @@ function clearTasks() {
 function resetNotifications() {
     const tasks = document.querySelectorAll(".task");
     tasks.forEach((task) => {
-        task.dataset.notified = "false"; // Reseta o estado de notificação
+        // Só reseta notified se permanentlyNotified for false
+        if (task.dataset.permanentlyNotified !== "true") {
+            task.dataset.notified = "false";
+        }
     });
     saveTasks(); // Salva o novo estado no localStorage
 }
@@ -133,13 +132,15 @@ function saveTasks() {
                 ? "medium"
                 : "high";
             const timestamp = task.dataset.timestamp;
-            const notified = task.dataset.notified; // Salva o estado da notificação
+            const notified = task.dataset.notified;
+            const permanentlyNotified = task.dataset.permanentlyNotified; // Salva o novo estado
             columns[columnId].push({
                 text: taskText,
                 completed: isCompleted,
                 priority,
                 timestamp,
                 notified,
+                permanentlyNotified,
             });
         }
     }
@@ -155,13 +156,22 @@ function loadTasks() {
         for (const columnId in columns) {
             const taskList = document.getElementById(columnId);
             columns[columnId].forEach(
-                ({ text, completed, priority, timestamp, notified }) => {
+                ({
+                    text,
+                    completed,
+                    priority,
+                    timestamp,
+                    notified,
+                    permanentlyNotified,
+                }) => {
                     const task = document.createElement("div");
                     task.className = `task ${priority}`;
                     if (completed) task.classList.add("completed");
                     task.draggable = true;
                     task.dataset.timestamp = timestamp; // Restaura o timestamp
                     task.dataset.notified = notified || "false"; // Restaura o estado da notificação
+                    task.dataset.permanentlyNotified =
+                        permanentlyNotified || "false"; // Restaura o estado permanente
                     task.innerHTML = `
                         <input type="checkbox" onchange="toggleComplete(this)" ${
                             completed ? "checked" : ""
@@ -213,8 +223,14 @@ function checkOverdueTasks() {
         const timestamp = parseInt(task.dataset.timestamp);
         const isCompleted = task.classList.contains("completed");
         const alreadyNotified = task.dataset.notified === "true";
+        const permanentlyNotified = task.dataset.permanentlyNotified === "true";
 
-        if (!isCompleted && !alreadyNotified && timestamp) {
+        if (
+            !isCompleted &&
+            !alreadyNotified &&
+            !permanentlyNotified &&
+            timestamp
+        ) {
             const diff = Date.now() - timestamp;
             const secondsElapsed = Math.floor(diff / 1000);
 
@@ -233,7 +249,7 @@ function checkOverdueTasks() {
     });
 }
 
-// Função para Enviar Notificação (Atualizada com Popup e Som)
+// Função para Enviar Notificação
 function sendNotification(taskText) {
     try {
         // 1. Enviar notificação nativa (se disponível)
@@ -250,7 +266,7 @@ function sendNotification(taskText) {
             };
         }
 
-        // 2. Enviar evento ao main process para exibir o popup
+        // 2. Enviar evento ao main process para exibir o popup e esperar resposta
         const { ipcRenderer } = require("electron");
         ipcRenderer.send("show-overdue-popup", taskText);
 
@@ -260,6 +276,27 @@ function sendNotification(taskText) {
             notificationSound.currentTime = 0; // Reinicia o áudio
             notificationSound.play();
         }
+
+        // 4. Escutar a resposta do popup
+        ipcRenderer.on(
+            "popup-response",
+            (event, { taskText: responseTaskText, ignored }) => {
+                if (responseTaskText === taskText && ignored) {
+                    // Se o usuário clicou em "Ignorar", marcar a tarefa como permanentemente notificada
+                    const tasks = document.querySelectorAll(".task");
+                    const task = Array.from(tasks).find(
+                        (t) =>
+                            t
+                                .querySelector("span")
+                                .childNodes[0].textContent.trim() === taskText
+                    );
+                    if (task) {
+                        task.dataset.permanentlyNotified = "true";
+                        saveTasks(); // Salva o estado
+                    }
+                }
+            }
+        );
     } catch (error) {
         // Erro tratado silenciosamente
     }
@@ -285,16 +322,35 @@ function updateCounters() {
 
 function toggleDarkMode() {
     document.body.classList.toggle("dark-mode");
-    localStorage.setItem(
-        "darkMode",
-        document.body.classList.contains("dark-mode")
-    );
+    const isDarkMode = document.body.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", isDarkMode);
+    // Atualizar o texto e os ícones do botão
+    const darkModeButton = document.querySelector(".dark-mode-toggle");
+    const darkModeText = darkModeButton.querySelector(".dark-mode-text");
+    const sunIcon = darkModeButton.querySelector(".sun-icon");
+    const moonIcon = darkModeButton.querySelector(".moon-icon");
+    darkModeText.textContent = isDarkMode
+        ? "Desligar Modo Escuro"
+        : "Ligar Modo Escuro";
+    sunIcon.style.display = isDarkMode ? "none" : "inline";
+    moonIcon.style.display = isDarkMode ? "inline" : "none";
 }
 
 function loadDarkModePreference() {
-    if (localStorage.getItem("darkMode") === "true") {
+    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    if (isDarkMode) {
         document.body.classList.add("dark-mode");
     }
+    // Definir o texto e os ícones iniciais do botão
+    const darkModeButton = document.querySelector(".dark-mode-toggle");
+    const darkModeText = darkModeButton.querySelector(".dark-mode-text");
+    const sunIcon = darkModeButton.querySelector(".sun-icon");
+    const moonIcon = darkModeButton.querySelector(".moon-icon");
+    darkModeText.textContent = isDarkMode
+        ? "Desligar Modo Escuro"
+        : "Ligar Modo Escuro";
+    sunIcon.style.display = isDarkMode ? "none" : "inline";
+    moonIcon.style.display = isDarkMode ? "inline" : "none";
 }
 
 // Evento de Adicionar Tarefa com Enter

@@ -1,6 +1,6 @@
 {
     "name": "todo_js",
-    "version": "1.0.1",
+    "version": "1.0.10",
     "description": "Painel de Tarefas",
     "main": "main.js",
     "scripts": {
@@ -22,6 +22,13 @@
         "win": {
             "target": "nsis",
             "icon": "icon.ico"
-        }
+        },
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "**/*",
+            "assets/**/*"
+        ]
     }
 }

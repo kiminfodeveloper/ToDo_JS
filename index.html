@@ -5,6 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Painel de Tarefas</title>
         <link rel="stylesheet" href="./css/styles.css" />
+        <!-- Adicionando Bootstrap Icons via CDN -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        />
     </head>
     <body>
         <div class="container">
@@ -20,14 +25,21 @@
                     <option value="medium">Média</option>
                     <option value="high">Alta</option>
                 </select>
-                <button onclick="addTask()">Adicionar</button>
-                <button onclick="clearTasks()">Limpar Tudo</button>
-                <!-- <button onclick="resetNotifications()">
+                <button class="btn-add" onclick="addTask()">Adicionar</button>
+                <button class="btn-clear" onclick="clearTasks()">
+                    Limpar Tudo
+                </button>
+                <button class="btn-reset" onclick="resetNotifications()">
                     Resetar Notificações
-                </button> -->
+                </button>
             </div>
             <button class="dark-mode-toggle" onclick="toggleDarkMode()">
-                Modo Escuro
+                <i class="bi bi-sun dark-mode-icon sun-icon"></i>
+                <i
+                    class="bi bi-moon dark-mode-icon moon-icon"
+                    style="display: none"
+                ></i>
+                <span class="dark-mode-text">Ligar Modo Escuro</span>
             </button>
             <div class="board">
                 <div
@@ -62,7 +74,7 @@
         <!-- Elemento de áudio para o som de notificação -->
         <audio
             id="notificationSound"
-            src="./assets/wakeup.wav"
+            src="./assets/notification.mp3"
             preload="auto"
         ></audio>
         <script src="./js/script.js"></script>

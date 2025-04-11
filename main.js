@@ -15,12 +15,21 @@ function createWindow() {
 
 // Escutar evento do renderer para exibir o popup
 ipcMain.on("show-overdue-popup", (event, taskText) => {
-    dialog.showMessageBox({
-        type: "warning",
-        title: "Tarefa Atrasada",
-        message: `A tarefa "${taskText}" está incompleta há mais de 30 minutos!`,
-        buttons: ["OK"],
-    });
+    dialog
+        .showMessageBox({
+            type: "warning",
+            title: "Tarefa Atrasada",
+            message: `A tarefa "${taskText}" está incompleta há mais de 30 minutos!`,
+            buttons: ["OK", "Ignorar"],
+            defaultId: 0, // Botão "OK" é o padrão
+        })
+        .then((response) => {
+            // Enviar a resposta de volta ao renderer
+            event.reply("popup-response", {
+                taskText,
+                ignored: response.response === 1, // true se "Ignorar" foi clicado
+            });
+        });
 });
 
 app.whenReady().then(createWindow);
