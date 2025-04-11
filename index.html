@@ -22,6 +22,9 @@
                 </select>
                 <button onclick="addTask()">Adicionar</button>
                 <button onclick="clearTasks()">Limpar Tudo</button>
+                <!-- <button onclick="resetNotifications()">
+                    Resetar Notificações
+                </button> -->
             </div>
             <button class="dark-mode-toggle" onclick="toggleDarkMode()">
                 Modo Escuro
@@ -56,6 +59,12 @@
                 </div>
             </div>
         </div>
+        <!-- Elemento de áudio para o som de notificação -->
+        <audio
+            id="notificationSound"
+            src="./assets/wakeup.wav"
+            preload="auto"
+        ></audio>
         <script src="./js/script.js"></script>
     </body>
 </html>

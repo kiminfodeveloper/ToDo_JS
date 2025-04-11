@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const path = require("path");
 
 function createWindow() {
@@ -10,8 +10,18 @@ function createWindow() {
             contextIsolation: false,
         },
     });
-    win.loadFile("index.html"); // Carrega seu index.html
+    win.loadFile("index.html");
 }
+
+// Escutar evento do renderer para exibir o popup
+ipcMain.on("show-overdue-popup", (event, taskText) => {
+    dialog.showMessageBox({
+        type: "warning",
+        title: "Tarefa Atrasada",
+        message: `A tarefa "${taskText}" está incompleta há mais de 30 minutos!`,
+        buttons: ["OK"],
+    });
+});
 
 app.whenReady().then(createWindow);
 

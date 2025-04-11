@@ -1,12 +1,12 @@
 {
     "name": "todo_js",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Painel de Tarefas",
     "main": "main.js",
     "scripts": {
         "start": "electron .",
         "clean": "rimraf dist",
-        "build": "npm run clean && electron-builder"
+        "build": "npm run clean && electron-builder --win --x64"
     },
     "keywords": [],
     "author": "Kevyn Melo",
@@ -20,7 +20,8 @@
         "appId": "com.example.todojs",
         "productName": "Painel de Tarefas",
         "win": {
-            "target": "nsis"
+            "target": "nsis",
+            "icon": "icon.ico"
         }
     }
 }
