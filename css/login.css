@@ -1,0 +1,141 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #e0e0e0;
+}
+
+.login-container {
+    background-color: #2a2a2a;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #e0e0e0;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #3a3a3a;
+    color: #fff;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #28a745;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+#loginButton {
+    background-color: #28a745;
+    color: white;
+}
+
+#loginButton:hover {
+    background-color: #218838;
+}
+
+#registerButton {
+    background-color: #007bff;
+    color: white;
+}
+
+#registerButton:hover {
+    background-color: #0056b3;
+}
+
+#toggleForm {
+    background: none;
+    border: none;
+    color: #28a745;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#toggleForm:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: red;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.remember-me label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.remember-me input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.confirm-password.hidden {
+    display: none;
+}
+
+/* Estilo para campos inválidos */
+input:invalid {
+    border-color: var(--error-color);
+}
+
+/* Mensagem de erro para senhas que não coincidem */
+.password-mismatch {
+    border-color: var(--error-color) !important;
+}

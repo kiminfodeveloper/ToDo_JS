@@ -1,6 +1,6 @@
 {
     "name": "todo_js",
-    "version": "1.0.10",
+    "version": "1.0.13",
     "description": "Painel de Tarefas",
     "main": "main.js",
     "scripts": {
@@ -11,6 +11,10 @@
     "keywords": [],
     "author": "Kevyn Melo",
     "license": "MIT",
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "sqlite3": "^5.1.7"
+    },
     "devDependencies": {
         "electron": "^32.1.2",
         "electron-builder": "^24.13.3",

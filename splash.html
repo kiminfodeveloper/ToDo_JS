@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Splash Screen</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background-color: #1a1a1a; /* Mesmo fundo escuro do modo escuro */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                font-family: Arial, sans-serif;
+                color: #fff;
+            }
+
+            h1 {
+                font-size: 28px;
+                margin-bottom: 20px;
+                color: #e0e0e0; /* Cor clara para o texto */
+            }
+
+            /* Estilo do loading */
+            .loader {
+                border: 4px solid #3a3a3a; /* Cor de fundo do círculo */
+                border-top: 4px solid #28a745; /* Cor do spinner (verde, como prioridade baixa) */
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Painel de Tarefas</h1>
+        <div class="loader"></div>
+    </body>
+</html>

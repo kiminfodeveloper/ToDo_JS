@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css; img-src 'self' data:; media-src 'self'; font-src 'self' https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/"
+        />
         <title>Painel de Tarefas</title>
         <link rel="stylesheet" href="./css/styles.css" />
         <!-- Adicionando Bootstrap Icons via CDN -->
@@ -13,7 +17,20 @@
     </head>
     <body>
         <div class="container">
-            <h1>Painel de Tarefas</h1>
+            <header class="header">
+                <h1 class="header-title">Painel de Tarefas</h1>
+                <div class="header-controls">
+                    <button class="dark-mode-toggle" id="darkModeToggle">
+                        <span class="dark-mode-text">Ligar Modo Escuro</span>
+                        <i class="bi bi-sun-fill sun-icon"></i>
+                        <i
+                            class="bi bi-moon-fill moon-icon"
+                            style="display: none"
+                        ></i>
+                    </button>
+                    <button id="logoutButton">Sair</button>
+                </div>
+            </header>
             <div class="input-area">
                 <input
                     type="text"
@@ -25,58 +42,29 @@
                     <option value="medium">Média</option>
                     <option value="high">Alta</option>
                 </select>
-                <button class="btn-add" onclick="addTask()">Adicionar</button>
-                <button class="btn-clear" onclick="clearTasks()">
+                <button class="btn-add" id="addTaskButton">Adicionar</button>
+                <button class="btn-clear" id="clearTasksButton">
                     Limpar Tudo
                 </button>
-                <button class="btn-reset" onclick="resetNotifications()">
+                <button class="btn-reset" id="resetNotificationsButton">
                     Resetar Notificações
                 </button>
             </div>
-            <button class="dark-mode-toggle" onclick="toggleDarkMode()">
-                <i class="bi bi-sun dark-mode-icon sun-icon"></i>
-                <i
-                    class="bi bi-moon dark-mode-icon moon-icon"
-                    style="display: none"
-                ></i>
-                <span class="dark-mode-text">Ligar Modo Escuro</span>
-            </button>
             <div class="board">
-                <div
-                    class="column"
-                    id="todo"
-                    ondrop="drop(event)"
-                    ondragover="allowDrop(event)"
-                >
+                <div class="column" id="todo">
                     <h2>A Fazer</h2>
                     <div class="task-list" id="todo-list"></div>
                 </div>
-                <div
-                    class="column"
-                    id="in-progress"
-                    ondrop="drop(event)"
-                    ondragover="allowDrop(event)"
-                >
+                <div class="column" id="in-progress">
                     <h2>Em Progresso</h2>
                     <div class="task-list" id="in-progress-list"></div>
                 </div>
-                <div
-                    class="column"
-                    id="done"
-                    ondrop="drop(event)"
-                    ondragover="allowDrop(event)"
-                >
+                <div class="column" id="done">
                     <h2>Concluído</h2>
                     <div class="task-list" id="done-list"></div>
                 </div>
             </div>
         </div>
-        <!-- Elemento de áudio para o som de notificação -->
-        <audio
-            id="notificationSound"
-            src="./assets/notification.mp3"
-            preload="auto"
-        ></audio>
-        <script src="./js/script.js"></script>
+        <script type="module" src="./js/script.js"></script>
     </body>
 </html>
