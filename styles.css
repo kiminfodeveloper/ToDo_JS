@@ -29,7 +29,12 @@
 /* Estilo para tarefas concluídas */
 .task.completed span {
     text-decoration: line-through;
-    color: #888;
+    color: var(--task-completed);
+    opacity: 0.8;
+}
+
+.task.completed {
+    background-color: rgba(200, 200, 200, 0.2);
 }
 
 /* Cores para o tema claro */

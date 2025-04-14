@@ -1,90 +1,89 @@
 const sqlite3 = require("sqlite3");
 const path = require("path");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 
-// Inicializar o banco de dados (database.db está na mesma pasta que este arquivo)
+// Inicializar o banco de dados
 const dbPath = path.join(__dirname, "database.db");
-console.log("database_db_users.js: Caminho do banco de dados:", dbPath);
 
+// Verificar se o diretório existe
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Registrar estado do banco de dados
+const dbExists = fs.existsSync(dbPath);
+
+// Conectar ao banco de dados (criar se não existir)
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error(
-            "database_db_users.js: Erro ao conectar ao banco de dados:",
-            err.message
-        );
+        process.exit(1); // Encerrar o aplicativo em caso de erro crítico
     } else {
-        console.log(
-            "database_db_users.js: Conectado ao banco de dados SQLite."
-        );
+        // Se banco de dados foi recém-criado, inicialize as tabelas
+        initDatabase();
     }
 });
 
-// Criar tabelas
-db.serialize(() => {
-    // Tabela de usuários
-    db.run(
-        `
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            dark_mode INTEGER DEFAULT 0
-        )
-    `,
-        (err) => {
-            if (err) {
-                console.error(
-                    "database_db_users.js: Erro ao criar tabela users:",
-                    err
-                );
-            } else {
-                console.log(
-                    "database_db_users.js: Tabela users criada/verificada com sucesso"
-                );
+// Função para inicializar o banco de dados
+function initDatabase() {
+    db.serialize(() => {
+        // Tabela de usuários
+        db.run(
+            `
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                dark_mode INTEGER DEFAULT 0
+            )
+        `,
+            (err) => {
+                // Se o banco de dados foi recém-criado, crie um usuário de teste
+                if (!dbExists && !err) {
+                    bcrypt.hash("teste123", 10, (err, hash) => {
+                        if (!err) {
+                            db.run(
+                                "INSERT OR IGNORE INTO users (email, password) VALUES (?, ?)",
+                                ["teste@teste.com", hash]
+                            );
+                        }
+                    });
+                }
             }
-        }
-    );
+        );
 
-    // Tabela de tarefas
-    db.run(
+        // Tabela de tarefas
+        db.run(
+            `
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                column TEXT NOT NULL,
+                text TEXT NOT NULL,
+                completed INTEGER DEFAULT 0,
+                priority TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                notified INTEGER DEFAULT 0,
+                permanently_notified INTEGER DEFAULT 0,
+                reminder_time INTEGER DEFAULT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
         `
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            column TEXT NOT NULL,
-            text TEXT NOT NULL,
-            completed INTEGER DEFAULT 0,
-            priority TEXT NOT NULL,
-            timestamp INTEGER NOT NULL,
-            notified INTEGER DEFAULT 0,
-            permanently_notified INTEGER DEFAULT 0,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    `,
-        (err) => {
-            if (err) {
-                console.error(
-                    "database_db_users.js: Erro ao criar tabela tasks:",
-                    err
-                );
-            } else {
-                console.log(
-                    "database_db_users.js: Tabela tasks criada/verificada com sucesso"
-                );
-            }
-        }
-    );
-});
+        );
+    });
+}
 
 // Funções de Usuários
 async function createUser(email, password) {
-    console.log(
-        "database_db_users.js: Iniciando criação de usuário com email:",
-        email
-    );
+    // Primeiro, verificar se o email já existe
     try {
+        const emailExists = await checkEmail(email);
+        if (emailExists) {
+            return { success: false, error: "Este email já está cadastrado." };
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log("database_db_users.js: Senha hash gerada com sucesso");
 
         return new Promise((resolve, reject) => {
             db.run(
@@ -92,29 +91,25 @@ async function createUser(email, password) {
                 [email, hashedPassword],
                 function (err) {
                     if (err) {
-                        console.error(
-                            "database_db_users.js: Erro ao criar usuário:",
-                            err.message,
-                            "Código:",
-                            err.code
-                        );
-                        reject(err);
+                        if (err.code === "SQLITE_CONSTRAINT") {
+                            resolve({
+                                success: false,
+                                error: "Este email já está cadastrado.",
+                            });
+                        } else {
+                            resolve({
+                                success: false,
+                                error: "Erro ao criar usuário.",
+                            });
+                        }
                     } else {
-                        console.log(
-                            "database_db_users.js: Usuário criado com ID:",
-                            this.lastID
-                        );
-                        resolve(this.lastID);
+                        resolve({ success: true, userId: this.lastID });
                     }
                 }
             );
         });
     } catch (err) {
-        console.error(
-            "database_db_users.js: Erro ao gerar hash da senha:",
-            err
-        );
-        throw err;
+        return { success: false, error: "Erro ao criar usuário." };
     }
 }
 
@@ -125,19 +120,11 @@ async function findUserByEmail(email, password) {
             [email],
             async (err, row) => {
                 if (err) {
-                    console.error(
-                        "database_db_users.js: Erro ao buscar usuário:",
-                        err
-                    );
                     reject(err);
                     return;
                 }
 
                 if (!row) {
-                    console.log(
-                        "database_db_users.js: Usuário não encontrado para email:",
-                        email
-                    );
                     resolve({
                         success: false,
                         error: "Usuário não encontrado.",
@@ -145,14 +132,7 @@ async function findUserByEmail(email, password) {
                     return;
                 }
 
-                console.log("database_db_users.js: Usuário encontrado:", email);
                 const match = await bcrypt.compare(password, row.password);
-                console.log(
-                    "database_db_users.js: Comparação de senha para",
-                    email,
-                    ":",
-                    match
-                );
 
                 if (!match) {
                     resolve({ success: false, error: "Senha incorreta." });
@@ -181,8 +161,8 @@ async function saveTasks(userId, tasks) {
 
                 // Depois, insere as novas tarefas
                 const stmt = db.prepare(
-                    `INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+                    `INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified, reminder_time)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 );
 
                 try {
@@ -196,7 +176,8 @@ async function saveTasks(userId, tasks) {
                                 task.priority,
                                 task.timestamp,
                                 task.notified === "true" ? 1 : 0,
-                                task.permanentlyNotified === "true" ? 1 : 0
+                                task.permanentlyNotified === "true" ? 1 : 0,
+                                task.reminderTime || null
                             );
                         }
                     }
@@ -204,7 +185,6 @@ async function saveTasks(userId, tasks) {
                     stmt.finalize();
                     db.run("COMMIT", (err) => {
                         if (err) {
-                            console.error("Erro ao fazer commit:", err);
                             db.run("ROLLBACK");
                             reject(err);
                         } else {
@@ -212,7 +192,6 @@ async function saveTasks(userId, tasks) {
                         }
                     });
                 } catch (error) {
-                    console.error("Erro ao salvar tarefas:", error);
                     stmt.finalize();
                     db.run("ROLLBACK");
                     reject(error);
@@ -229,10 +208,6 @@ async function loadTasks(userId) {
             [userId],
             (err, rows) => {
                 if (err) {
-                    console.error(
-                        "database_db_users.js: Erro ao carregar tarefas:",
-                        err.message
-                    );
                     reject(err);
                 } else {
                     const tasks = {
@@ -249,15 +224,11 @@ async function loadTasks(userId) {
                             priority: row.priority,
                             notified: row.notified === 1,
                             permanentlyNotified: row.permanently_notified === 1,
+                            reminderTime: row.reminder_time,
                         };
                         tasks[row.column].push(task);
                     });
 
-                    console.log(
-                        "database_db_users.js: Tarefas carregadas para userId:",
-                        userId,
-                        tasks
-                    );
                     resolve(tasks);
                 }
             }
@@ -268,8 +239,8 @@ async function loadTasks(userId) {
 async function saveTask(userId, task) {
     return new Promise((resolve, reject) => {
         const stmt = db.prepare(`
-            INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified, reminder_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
         stmt.run(
@@ -281,9 +252,9 @@ async function saveTask(userId, task) {
             task.timestamp,
             task.notified === "true" ? 1 : 0,
             task.permanentlyNotified === "true" ? 1 : 0,
+            task.reminderTime || null,
             (err) => {
                 if (err) {
-                    console.error("Erro ao salvar tarefa:", err);
                     reject(err);
                 } else {
                     resolve();
@@ -329,16 +300,7 @@ async function getUserDarkMode(userId) {
 }
 
 function closeDatabase() {
-    db.close((err) => {
-        if (err) {
-            console.error(
-                "database_db_users.js: Erro ao fechar o banco de dados:",
-                err.message
-            );
-        } else {
-            console.log("database_db_users.js: Banco de dados fechado.");
-        }
-    });
+    db.close();
 }
 
 async function checkEmail(email) {

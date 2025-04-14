@@ -42,6 +42,23 @@
                     <option value="medium">Média</option>
                     <option value="high">Alta</option>
                 </select>
+
+                <div class="reminder-container">
+                    <label
+                        for="reminderTime"
+                        title="Definir um lembrete para esta tarefa"
+                    >
+                        <input type="checkbox" id="enableReminder" />
+                        Lembrete
+                    </label>
+                    <input
+                        type="datetime-local"
+                        id="reminderTime"
+                        disabled
+                        title="Escolha data e hora para o lembrete"
+                    />
+                </div>
+
                 <button class="btn-add" id="addTaskButton">Adicionar</button>
                 <button class="btn-clear" id="clearTasksButton">
                     Limpar Tudo

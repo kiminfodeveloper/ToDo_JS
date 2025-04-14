@@ -23,7 +23,6 @@ export function updateCounters() {
 
 export async function toggleDarkMode() {
     if (!userId) {
-        console.error("Erro ao alternar tema: userId não fornecido");
         return;
     }
 
@@ -33,14 +32,11 @@ export async function toggleDarkMode() {
     try {
         await window.api.saveDarkMode(userId, isDarkMode);
         updateDarkModeUI(isDarkMode);
-    } catch (error) {
-        console.error("Erro ao salvar tema:", error);
-    }
+    } catch (error) {}
 }
 
 export async function loadDarkModePreference() {
     if (!userId) {
-        console.error("Erro ao carregar tema: userId não fornecido");
         return;
     }
 
@@ -52,9 +48,7 @@ export async function loadDarkModePreference() {
             document.body.classList.remove("dark-mode");
         }
         updateDarkModeUI(isDarkMode);
-    } catch (error) {
-        console.error("Erro ao carregar tema:", error);
-    }
+    } catch (error) {}
 }
 
 function updateDarkModeUI(isDarkMode) {

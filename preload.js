@@ -1,7 +1,5 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-console.log("preload.js: Iniciando carregamento");
-
 // Expor APIs seguras para o renderer process
 contextBridge.exposeInMainWorld("api", {
     // Funções de autenticação
@@ -23,5 +21,3 @@ contextBridge.exposeInMainWorld("api", {
         ipcRenderer.on("set-user-id", (event, userId) => callback(userId));
     },
 });
-
-console.log("preload.js: APIs expostas com sucesso");

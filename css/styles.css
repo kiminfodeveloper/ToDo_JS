@@ -476,3 +476,54 @@ body.dark-mode {
     --task-completed: #adb5bd;
     --column-bg: #2c3338;
 }
+
+.reminder-icon {
+    color: #ffc107;
+    margin-left: 5px;
+    font-style: normal;
+    cursor: help;
+}
+
+#reminderTime {
+    margin-right: 5px;
+    padding: 5px;
+    border: 1px solid var(--task-border);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.reminder-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 10px;
+}
+
+.reminder-container label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.reminder-container input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.reminder-container input[type="datetime-local"] {
+    padding: 5px;
+    border: 1px solid var(--task-border);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.reminder-container input[type="datetime-local"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

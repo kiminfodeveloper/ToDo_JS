@@ -16,3 +16,7 @@ dist/
 
 # Arquivos de cache do Electron Builder
 electron-builder-cache/
+
+# Database files
+database.db
+js/database.db

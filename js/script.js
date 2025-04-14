@@ -111,6 +111,36 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    // Configurar eventos do seletor de lembrete
+    const enableReminderCheckbox = document.getElementById("enableReminder");
+    const reminderTimeInput = document.getElementById("reminderTime");
+
+    if (enableReminderCheckbox && reminderTimeInput) {
+        // Configurar data/hora padrão para o próximo dia
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0); // 9:00 AM
+
+        // Formatar para o formato esperado pelo input datetime-local: YYYY-MM-DDThh:mm
+        const year = tomorrow.getFullYear();
+        const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+        const day = String(tomorrow.getDate()).padStart(2, "0");
+        const hours = String(tomorrow.getHours()).padStart(2, "0");
+        const minutes = String(tomorrow.getMinutes()).padStart(2, "0");
+
+        // Definir valor inicial (mas mantém desabilitado)
+        reminderTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+        // Adicionar event listener para o checkbox
+        enableReminderCheckbox.addEventListener("change", function () {
+            reminderTimeInput.disabled = !this.checked;
+            if (this.checked && !reminderTimeInput.value) {
+                // Se não houver valor e o checkbox for marcado, define o valor padrão
+                reminderTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        });
+    }
 });
 
 // Evento de Adicionar Tarefa com Enter

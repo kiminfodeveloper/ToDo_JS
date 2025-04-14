@@ -139,3 +139,10 @@ input:invalid {
 .password-mismatch {
     border-color: var(--error-color) !important;
 }
+
+.success {
+    color: #28a745;
+    margin-top: 10px;
+    text-align: center;
+    font-weight: bold;
+}

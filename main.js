@@ -26,10 +26,6 @@ function createSplashWindow() {
         },
     });
 
-    console.log(
-        "main.js: Carregando splashWindow com preload.js em",
-        path.join(__dirname, "preload.js")
-    );
     splashWindow.loadFile("splash.html");
     splashWindow.center();
 }
@@ -48,22 +44,8 @@ function createLoginWindow() {
         },
     });
 
-    console.log(
-        "main.js: Carregando loginWindow com preload.js em",
-        path.join(__dirname, "preload.js")
-    );
     loginWindow.loadFile("login.html");
     loginWindow.center();
-
-    // Adicionar listener para verificar se o preload foi carregado
-    loginWindow.webContents.on("did-finish-load", () => {
-        loginWindow.webContents.executeJavaScript(`
-            console.log('login.html: Verificando API:', window.api);
-            if (!window.api) {
-                console.error('login.html: API não está disponível!');
-            }
-        `);
-    });
 }
 
 function createMainWindow() {
@@ -79,17 +61,9 @@ function createMainWindow() {
         },
     });
 
-    console.log(
-        "main.js: Carregando mainWindow com preload.js em",
-        path.join(__dirname, "preload.js")
-    );
     mainWindow.loadFile("index.html");
 
     mainWindow.webContents.on("did-finish-load", () => {
-        console.log(
-            "main.js: index.html carregado, enviando userId:",
-            currentUserId
-        );
         mainWindow.webContents.send("set-user-id", currentUserId);
     });
 
@@ -99,14 +73,12 @@ function createMainWindow() {
 }
 
 app.on("ready", () => {
-    console.log("main.js: Aplicativo iniciado");
     createSplashWindow();
 
     setTimeout(() => {
         createLoginWindow();
 
         loginWindow.webContents.on("did-finish-load", () => {
-            console.log("main.js: login.html carregado");
             if (splashWindow) {
                 splashWindow.close();
                 splashWindow = null;
@@ -119,18 +91,9 @@ app.on("ready", () => {
 // Handlers para funções de usuário
 ipcMain.handle("login", async (event, email, password) => {
     try {
-        console.log("main.js: Buscando usuário com email:", email);
         const user = await dbFunctions.findUserByEmail(email, password);
-        console.log("main.js: Usuário encontrado:", email);
-        console.log(
-            "main.js: Comparação de senha para",
-            email,
-            ":",
-            user.success
-        );
         if (user.success) {
             currentUserId = user.userId;
-            console.log("main.js: Login bem-sucedido, userId:", currentUserId);
             loginWindow.close();
             createMainWindow();
             return { success: true };
@@ -138,27 +101,38 @@ ipcMain.handle("login", async (event, email, password) => {
             return { success: false, error: user.error };
         }
     } catch (err) {
-        console.error("main.js: Erro ao fazer login:", err);
         return { success: false, error: err.message };
     }
 });
 
 ipcMain.handle("register", async (event, email, password) => {
     try {
+        // Verificar se o email já existe
+        const emailExists = await dbFunctions.checkEmail(email);
+        if (emailExists) {
+            return {
+                success: false,
+                error: "Este email já está cadastrado.",
+            };
+        }
+
         const result = await dbFunctions.createUser(email, password);
         if (result.success) {
             currentUserId = result.userId;
-            console.log(
-                "main.js: Registro bem-sucedido, userId:",
-                currentUserId
-            );
             loginWindow.close();
             createMainWindow();
+            return {
+                success: true,
+                message: "Conta criada com sucesso!",
+            };
+        } else {
+            return result; // Retorna o erro da função createUser
         }
-        return result;
     } catch (err) {
-        console.error("main.js: Erro ao registrar usuário:", err);
-        return { success: false, error: err.message };
+        return {
+            success: false,
+            error: err.message || "Erro ao registrar usuário.",
+        };
     }
 });
 
@@ -177,19 +151,15 @@ ipcMain.handle("save-tasks", async (event, userId, tasks) => {
         await dbFunctions.saveTasks(userId, tasks);
         return { success: true };
     } catch (error) {
-        console.error("Erro ao salvar tarefas:", error);
         return { success: false, error: error.message };
     }
 });
 
 ipcMain.handle("load-tasks", async (event, userId) => {
     try {
-        console.log("main.js: Carregando tarefas para userId:", userId);
         const tasks = await dbFunctions.loadTasks(userId);
-        console.log("main.js: Tarefas carregadas:", tasks);
         return tasks;
     } catch (error) {
-        console.error("main.js: Erro ao carregar tarefas:", error);
         return {
             "todo-list": [],
             "in-progress-list": [],
@@ -203,7 +173,6 @@ ipcMain.handle("save-task", async (event, userId, task) => {
         await dbFunctions.saveTask(userId, task);
         return { success: true };
     } catch (err) {
-        console.error("main.js: Erro ao salvar tarefa:", err);
         return { success: false, error: err.message };
     }
 });
@@ -214,7 +183,6 @@ ipcMain.handle("save-dark-mode", async (event, userId, isDarkMode) => {
         await dbFunctions.updateUserDarkMode(userId, isDarkMode);
         return { success: true };
     } catch (error) {
-        console.error("Erro ao salvar tema:", error);
         return { success: false, error: error.message };
     }
 });
@@ -224,7 +192,6 @@ ipcMain.handle("load-dark-mode", async (event, userId) => {
         const isDarkMode = await dbFunctions.getUserDarkMode(userId);
         return isDarkMode;
     } catch (error) {
-        console.error("Erro ao carregar tema:", error);
         return false;
     }
 });
@@ -233,7 +200,6 @@ ipcMain.handle("check-email", async (event, email) => {
     try {
         return await dbFunctions.checkEmail(email);
     } catch (error) {
-        console.error("Erro ao verificar email:", error);
         return false;
     }
 });
