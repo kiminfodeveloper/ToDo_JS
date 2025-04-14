@@ -1,4 +1,4 @@
-const sqlite3 = require("sqlite3");
+const Database = require("better-sqlite3");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
@@ -16,62 +16,56 @@ if (!fs.existsSync(dbDir)) {
 const dbExists = fs.existsSync(dbPath);
 
 // Conectar ao banco de dados (criar se não existir)
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        process.exit(1); // Encerrar o aplicativo em caso de erro crítico
-    } else {
-        // Se banco de dados foi recém-criado, inicialize as tabelas
-        initDatabase();
-    }
-});
+let db;
+try {
+    db = new Database(dbPath);
+
+    // Se banco de dados foi recém-criado, inicialize as tabelas
+    initDatabase();
+} catch (err) {
+    process.exit(1); // Encerrar o aplicativo em caso de erro crítico
+}
 
 // Função para inicializar o banco de dados
 function initDatabase() {
-    db.serialize(() => {
-        // Tabela de usuários
-        db.run(
-            `
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                dark_mode INTEGER DEFAULT 0
-            )
-        `,
-            (err) => {
-                // Se o banco de dados foi recém-criado, crie um usuário de teste
-                if (!dbExists && !err) {
-                    bcrypt.hash("teste123", 10, (err, hash) => {
-                        if (!err) {
-                            db.run(
-                                "INSERT OR IGNORE INTO users (email, password) VALUES (?, ?)",
-                                ["teste@teste.com", hash]
-                            );
-                        }
-                    });
-                }
-            }
-        );
+    // Tabela de usuários
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            dark_mode INTEGER DEFAULT 0
+        )
+    `);
 
-        // Tabela de tarefas
-        db.run(
-            `
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                column TEXT NOT NULL,
-                text TEXT NOT NULL,
-                completed INTEGER DEFAULT 0,
-                priority TEXT NOT NULL,
-                timestamp INTEGER NOT NULL,
-                notified INTEGER DEFAULT 0,
-                permanently_notified INTEGER DEFAULT 0,
-                reminder_time INTEGER DEFAULT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        `
-        );
-    });
+    // Se o banco de dados foi recém-criado, crie um usuário de teste
+    if (!dbExists) {
+        const hash = bcrypt.hashSync("teste123", 10);
+        try {
+            db.prepare(
+                "INSERT OR IGNORE INTO users (email, password) VALUES (?, ?)"
+            ).run("teste@teste.com", hash);
+        } catch (e) {
+            // Ignora erro se já existir
+        }
+    }
+
+    // Tabela de tarefas
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            column TEXT NOT NULL,
+            text TEXT NOT NULL,
+            completed INTEGER DEFAULT 0,
+            priority TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            notified INTEGER DEFAULT 0,
+            permanently_notified INTEGER DEFAULT 0,
+            reminder_time INTEGER DEFAULT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
 }
 
 // Funções de Usuários
@@ -85,159 +79,129 @@ async function createUser(email, password) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        return new Promise((resolve, reject) => {
-            db.run(
-                "INSERT INTO users (email, password) VALUES (?, ?)",
-                [email, hashedPassword],
-                function (err) {
-                    if (err) {
-                        if (err.code === "SQLITE_CONSTRAINT") {
-                            resolve({
-                                success: false,
-                                error: "Este email já está cadastrado.",
-                            });
-                        } else {
-                            resolve({
-                                success: false,
-                                error: "Erro ao criar usuário.",
-                            });
-                        }
-                    } else {
-                        resolve({ success: true, userId: this.lastID });
-                    }
-                }
+        try {
+            const stmt = db.prepare(
+                "INSERT INTO users (email, password) VALUES (?, ?)"
             );
-        });
+            const info = stmt.run(email, hashedPassword);
+            return { success: true, userId: info.lastInsertRowid };
+        } catch (err) {
+            if (err.code === "SQLITE_CONSTRAINT") {
+                return {
+                    success: false,
+                    error: "Este email já está cadastrado.",
+                };
+            } else {
+                return {
+                    success: false,
+                    error: "Erro ao criar usuário.",
+                };
+            }
+        }
     } catch (err) {
         return { success: false, error: "Erro ao criar usuário." };
     }
 }
 
 async function findUserByEmail(email, password) {
-    return new Promise((resolve, reject) => {
-        db.get(
-            "SELECT * FROM users WHERE email = ?",
-            [email],
-            async (err, row) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+    try {
+        const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
+        const row = stmt.get(email);
 
-                if (!row) {
-                    resolve({
-                        success: false,
-                        error: "Usuário não encontrado.",
-                    });
-                    return;
-                }
+        if (!row) {
+            return {
+                success: false,
+                error: "Usuário não encontrado.",
+            };
+        }
 
-                const match = await bcrypt.compare(password, row.password);
+        const match = await bcrypt.compare(password, row.password);
 
-                if (!match) {
-                    resolve({ success: false, error: "Senha incorreta." });
-                    return;
-                }
+        if (!match) {
+            return { success: false, error: "Senha incorreta." };
+        }
 
-                resolve({ success: true, userId: row.id });
-            }
-        );
-    });
+        return { success: true, userId: row.id };
+    } catch (err) {
+        return { success: false, error: "Erro ao fazer login." };
+    }
 }
 
 // Funções para tarefas
 async function saveTasks(userId, tasks) {
-    return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run("BEGIN TRANSACTION");
+    try {
+        // Iniciar transação
+        db.exec("BEGIN TRANSACTION");
 
-            // Primeiro, deleta todas as tarefas do usuário
-            db.run("DELETE FROM tasks WHERE user_id = ?", [userId], (err) => {
-                if (err) {
-                    db.run("ROLLBACK");
-                    reject(err);
-                    return;
-                }
+        // Primeiro, deleta todas as tarefas do usuário
+        db.prepare("DELETE FROM tasks WHERE user_id = ?").run(userId);
 
-                // Depois, insere as novas tarefas
-                const stmt = db.prepare(
-                    `INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified, reminder_time)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        // Depois, insere as novas tarefas
+        const stmt = db.prepare(
+            `INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified, reminder_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        );
+
+        for (const column in tasks) {
+            for (const task of tasks[column]) {
+                stmt.run(
+                    userId,
+                    column,
+                    task.text,
+                    task.completed ? 1 : 0,
+                    task.priority,
+                    task.timestamp,
+                    task.notified === "true" ? 1 : 0,
+                    task.permanentlyNotified === "true" ? 1 : 0,
+                    task.reminderTime || null
                 );
+            }
+        }
 
-                try {
-                    for (const column in tasks) {
-                        for (const task of tasks[column]) {
-                            stmt.run(
-                                userId,
-                                column,
-                                task.text,
-                                task.completed ? 1 : 0,
-                                task.priority,
-                                task.timestamp,
-                                task.notified === "true" ? 1 : 0,
-                                task.permanentlyNotified === "true" ? 1 : 0,
-                                task.reminderTime || null
-                            );
-                        }
-                    }
-
-                    stmt.finalize();
-                    db.run("COMMIT", (err) => {
-                        if (err) {
-                            db.run("ROLLBACK");
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    });
-                } catch (error) {
-                    stmt.finalize();
-                    db.run("ROLLBACK");
-                    reject(error);
-                }
-            });
-        });
-    });
+        // Finalizar transação
+        db.exec("COMMIT");
+        return true;
+    } catch (error) {
+        // Em caso de erro, desfaz todas as alterações
+        db.exec("ROLLBACK");
+        throw error;
+    }
 }
 
 async function loadTasks(userId) {
-    return new Promise((resolve, reject) => {
-        db.all(
-            "SELECT * FROM tasks WHERE user_id = ? ORDER BY timestamp DESC",
-            [userId],
-            (err, rows) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const tasks = {
-                        "todo-list": [],
-                        "in-progress-list": [],
-                        "done-list": [],
-                    };
-
-                    rows.forEach((row) => {
-                        const task = {
-                            text: row.text,
-                            timestamp: row.timestamp,
-                            completed: row.completed === 1,
-                            priority: row.priority,
-                            notified: row.notified === 1,
-                            permanentlyNotified: row.permanently_notified === 1,
-                            reminderTime: row.reminder_time,
-                        };
-                        tasks[row.column].push(task);
-                    });
-
-                    resolve(tasks);
-                }
-            }
+    try {
+        const stmt = db.prepare(
+            "SELECT * FROM tasks WHERE user_id = ? ORDER BY timestamp DESC"
         );
-    });
+        const rows = stmt.all(userId);
+
+        const tasks = {
+            "todo-list": [],
+            "in-progress-list": [],
+            "done-list": [],
+        };
+
+        rows.forEach((row) => {
+            const task = {
+                text: row.text,
+                timestamp: row.timestamp,
+                completed: row.completed === 1,
+                priority: row.priority,
+                notified: row.notified === 1,
+                permanentlyNotified: row.permanently_notified === 1,
+                reminderTime: row.reminder_time,
+            };
+            tasks[row.column].push(task);
+        });
+
+        return tasks;
+    } catch (err) {
+        throw err;
+    }
 }
 
 async function saveTask(userId, task) {
-    return new Promise((resolve, reject) => {
+    try {
         const stmt = db.prepare(`
             INSERT INTO tasks (user_id, column, text, completed, priority, timestamp, notified, permanently_notified, reminder_time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -252,67 +216,50 @@ async function saveTask(userId, task) {
             task.timestamp,
             task.notified === "true" ? 1 : 0,
             task.permanentlyNotified === "true" ? 1 : 0,
-            task.reminderTime || null,
-            (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            }
+            task.reminderTime || null
         );
 
-        stmt.finalize();
-    });
+        return true;
+    } catch (err) {
+        throw err;
+    }
 }
 
 // Funções para tema
 async function updateUserDarkMode(userId, isDarkMode) {
-    return new Promise((resolve, reject) => {
-        db.run(
-            "UPDATE users SET dark_mode = ? WHERE id = ?",
-            [isDarkMode ? 1 : 0, userId],
-            (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            }
-        );
-    });
+    try {
+        const stmt = db.prepare("UPDATE users SET dark_mode = ? WHERE id = ?");
+        stmt.run(isDarkMode ? 1 : 0, userId);
+        return true;
+    } catch (err) {
+        throw err;
+    }
 }
 
 async function getUserDarkMode(userId) {
-    return new Promise((resolve, reject) => {
-        db.get(
-            "SELECT dark_mode FROM users WHERE id = ?",
-            [userId],
-            (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row ? row.dark_mode === 1 : false);
-                }
-            }
-        );
-    });
+    try {
+        const stmt = db.prepare("SELECT dark_mode FROM users WHERE id = ?");
+        const row = stmt.get(userId);
+        return row ? row.dark_mode === 1 : false;
+    } catch (err) {
+        throw err;
+    }
 }
 
 function closeDatabase() {
-    db.close();
+    if (db) {
+        db.close();
+    }
 }
 
 async function checkEmail(email) {
-    return new Promise((resolve, reject) => {
-        db.get("SELECT * FROM users WHERE email = ?", [email], (err, row) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(!!row); // Retorna true se o email existir, false caso contrário
-            }
-        });
-    });
+    try {
+        const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
+        const row = stmt.get(email);
+        return !!row; // Retorna true se o email existir, false caso contrário
+    } catch (err) {
+        throw err;
+    }
 }
 
 module.exports = {
