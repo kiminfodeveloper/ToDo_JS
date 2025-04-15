@@ -1,11 +1,13 @@
-# 📋 Painel de Tarefas
+# 📋 Gerenciador de Tarefas
 
-Bem-vindo ao repositório do **Painel de Tarefas**, um aplicativo desktop para gerenciamento de tarefas com uma interface de quadro Kanban. Desenvolvido com HTML, CSS, JavaScript e Electron, ele permite organizar tarefas de forma visual e interativa, com suporte a prioridades, modo escuro e tempo relativo.
+Bem-vindo ao repositório do **Gerenciador de Tarefas**, um aplicativo desktop para gerenciamento de tarefas com uma interface de quadro Kanban. Desenvolvido com HTML, CSS, JavaScript e Electron, ele permite organizar tarefas de forma visual e interativa, com suporte a prioridades, modo escuro e tempo relativo.
 
 ## 📸 Preview
 
-![Painel de Tarefas Preview](<./images/preview%20(1).png>)
-![Painel de Tarefas Preview](<./images/preview%20(2).png>)
+![Painel de Tarefas Preview](./images/preview.png)
+![Painel de Tarefas Preview](./images/preview1.png)
+![Painel de Tarefas Preview](./images/preview2.png)
+![Painel de Tarefas Preview](./images/preview3.png)
 
 ## ✨ Funcionalidades
 
@@ -87,4 +89,4 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 
 ### Link direto de download
 
-[Download](https://drive.google.com/file/d/1JFVOaVuTlGLBfKUqJQ6hGYTEM3T4_jSj/view?usp=sharing)
+[Download](https://drive.google.com/file/d/1s-LFr4dvuv0L90B8lre8xMZL0jQfN6Ir/view?usp=sharing)

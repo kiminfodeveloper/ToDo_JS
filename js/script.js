@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // Inicialização
 document.addEventListener("DOMContentLoaded", () => {
     loadTasks();
@@ -5,6 +6,89 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDarkModePreference();
     setInterval(updateTimeAgo, 1000); // Atualiza o tempo a cada segundo
     setInterval(checkOverdueTasks, 1000); // Verifica tarefas atrasadas a cada segundo
+=======
+import {
+    addTask,
+    toggleComplete,
+    removeTask,
+    clearTasks,
+    setSaveTasks as setTasksSaveTasks,
+    setUpdateCounters as setTasksUpdateCounters,
+    setUpdateTimeAgo as setTasksUpdateTimeAgo,
+    setDragStart as setTasksDragStart,
+    setDragEnd as setTasksDragEnd,
+} from "./tasks.js";
+
+import {
+    allowDrop,
+    dragStart,
+    dragEnd,
+    drop,
+    setSaveTasks as setDragDropSaveTasks,
+    setUpdateCounters as setDragDropUpdateCounters,
+} from "./dragDrop.js";
+
+import {
+    saveTasks,
+    loadTasks,
+    setToggleComplete,
+    setDragStart as setPersistenceDragStart,
+    setDragEnd as setPersistenceDragEnd,
+    setUpdateTimeAgo as setPersistenceUpdateTimeAgo,
+} from "./persistence.js";
+
+import {
+    resetNotifications,
+    checkOverdueTasks,
+    sendNotification,
+    setSaveTasks as setNotificationsSaveTasks,
+} from "./notifications.js";
+
+import {
+    updateCounters,
+    toggleDarkMode,
+    loadDarkModePreference,
+    updateTimeAgo,
+} from "./ui.js";
+
+// Configurar dependências entre módulos
+setTasksSaveTasks(saveTasks);
+setTasksUpdateCounters(updateCounters);
+setTasksUpdateTimeAgo(updateTimeAgo);
+setTasksDragStart(dragStart);
+setTasksDragEnd(dragEnd);
+
+setDragDropSaveTasks(saveTasks);
+setDragDropUpdateCounters(updateCounters);
+
+setToggleComplete(toggleComplete);
+setPersistenceDragStart(dragStart);
+setPersistenceDragEnd(dragEnd);
+setPersistenceUpdateTimeAgo(updateTimeAgo);
+
+setNotificationsSaveTasks(saveTasks);
+
+// Inicialização
+document.addEventListener("DOMContentLoaded", () => {
+    // Event listeners para os botões
+    document
+        .getElementById("darkModeToggle")
+        .addEventListener("click", toggleDarkMode);
+
+    // Ocultar o botão de logout
+    const logoutButton = document.getElementById("logoutButton");
+    if (logoutButton) {
+        logoutButton.style.display = "none";
+    }
+
+    document.getElementById("addTaskButton").addEventListener("click", addTask);
+    document
+        .getElementById("clearTasksButton")
+        .addEventListener("click", clearTasks);
+    document
+        .getElementById("resetNotificationsButton")
+        .addEventListener("click", resetNotifications);
+>>>>>>> Stashed changes
 
     // Verificar permissão para notificações
     if (typeof Notification !== "undefined") {
@@ -14,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+<<<<<<< Updated upstream
 // Funções de Tarefa
 function addTask() {
     const taskInput = document.getElementById("taskInput");
@@ -248,6 +333,20 @@ function checkOverdueTasks() {
         }
     });
 }
+=======
+    // Carregar dados imediatamente
+    loadTasks();
+    updateCounters();
+    loadDarkModePreference();
+    setInterval(updateTimeAgo, 1000);
+    setInterval(checkOverdueTasks, 1000);
+
+    if (typeof Notification !== "undefined") {
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }
+>>>>>>> Stashed changes
 
 // Função para Enviar Notificação
 function sendNotification(taskText) {
@@ -359,3 +458,17 @@ document.getElementById("taskInput").addEventListener("keypress", (e) => {
         addTask();
     }
 });
+<<<<<<< Updated upstream
+=======
+
+// Exportar funções para uso no HTML
+window.addTask = addTask;
+window.toggleComplete = toggleComplete;
+window.removeTask = removeTask;
+window.clearTasks = clearTasks;
+window.resetNotifications = resetNotifications;
+window.allowDrop = allowDrop;
+window.dragStart = dragStart;
+window.dragEnd = dragEnd;
+window.toggleDarkMode = toggleDarkMode;
+>>>>>>> Stashed changes

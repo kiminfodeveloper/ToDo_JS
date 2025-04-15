@@ -1,7 +1,12 @@
 {
     "name": "todo_js",
+<<<<<<< Updated upstream
     "version": "1.0.10",
     "description": "Painel de Tarefas",
+=======
+    "version": "1.0.14",
+    "description": "Gerenciador de Tarefas",
+>>>>>>> Stashed changes
     "main": "main.js",
     "scripts": {
         "start": "electron .",
@@ -11,6 +16,10 @@
     "keywords": [],
     "author": "Kevyn Melo",
     "license": "MIT",
+<<<<<<< Updated upstream
+=======
+    "dependencies": {},
+>>>>>>> Stashed changes
     "devDependencies": {
         "electron": "^32.1.2",
         "electron-builder": "^24.13.3",
@@ -18,7 +27,7 @@
     },
     "build": {
         "appId": "com.example.todojs",
-        "productName": "Painel de Tarefas",
+        "productName": "Gerenciador de Tarefas",
         "win": {
             "target": "nsis",
             "icon": "icon.ico"
